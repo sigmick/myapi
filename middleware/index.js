@@ -1,0 +1,1 @@
+module.exports.isAuth = require('../middleware/is-auth');
