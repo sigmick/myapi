@@ -48,8 +48,8 @@ const csvupload = multer({
 const app = express();
 app.use(cors());
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); // application/json
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' })); // application/json
 
 app.use('/auth', authRoutes);
 
@@ -62,7 +62,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       .png()
       .toBuffer();
 
-    const blob = firebase.bucket.file('profile/' + uuidv4() + '.' + 'png');
+    const filename = uuidv4() + '.' + 'png';
+    const blob = firebase.bucket.file('profile/' + filename);
     // const blob = firebase.bucket.file(
     //   'profile/' + uuidv4() + '.' + mime.extension(req.file.mimetype)
     // );
@@ -83,7 +84,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     });
 
     blobWriter.on('finish', () => {
-      res.status(200).send('File uploaded.');
+      res.status(200).json({ filename: filename });
     });
 
     blobWriter.end(buff);
