@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const mime = require('mime-types');
 const sharp = require('sharp');
 const csv = require('csvtojson');
+const cors = require('cors');
 
 const { authRoutes } = require('./routes');
 
@@ -45,6 +46,7 @@ const csvupload = multer({
 });
 
 const app = express();
+app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // application/json
