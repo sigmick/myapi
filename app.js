@@ -36,7 +36,8 @@ const upload = multer({
 const csvupload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'text/csv') {
+    console.log(file.mimetype);
+    if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel') {
       cb(null, true);
     } else {
       cb(null, false);
