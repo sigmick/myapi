@@ -39,5 +39,15 @@ router.post(
 );
 
 router.get('/username', isAuth, authController.getUserName);
+router.get('/profile', isAuth, authController.getUserProfile);
+
+router.patch(
+  '/profile',
+  [
+    body('name').trim().not().isEmpty(),
+  ],
+  isAuth,
+  authController.updateProfile
+);
 
 module.exports = router;

@@ -91,8 +91,69 @@ const getUserName = async (req, res, next) => {
   }
 };
 
+const getUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      const error = new Error('User not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+    res
+      .status(200)
+      .json({
+        fullname: user.name,
+        mobile: user.mobile,
+        birthdate: user.birthdate,
+        userId: req.userId,
+      });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  const name = req.body.name;
+  const birthdate = req.body.birthdate;
+  const mobile = req.body.mobile;
+
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const error = new Error('Validation failed.');
+      error.statusCode = 422;
+      error.data = errors.array();
+      throw error;
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      const error = new Error('User not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+    
+    user.name = name;
+    user.birthdate = Date.parse(birthdate);
+    user.mobile = mobile;
+
+    const result = await user.save();
+    res.status(201).json({ message: 'User Profile updated!' , userId: result._id });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   signup,
   login,
   getUserName,
+  getUserProfile,
+  updateProfile,
 };

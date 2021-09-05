@@ -12,7 +12,9 @@ const sharp = require('sharp');
 const csv = require('csvtojson');
 const cors = require('cors');
 
+
 const { authRoutes } = require('./routes');
+const { isAuth } = require('./middleware');
 
 const MONGODB_URI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-shard-00-00.uun6y.mongodb.net:27017,cluster0-shard-00-01.uun6y.mongodb.net:27017,cluster0-shard-00-02.uun6y.mongodb.net:27017/${process.env.MONGO_DEFAULT_DATABASE}?ssl=true&replicaSet=atlas-wtrj82-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
@@ -54,7 +56,7 @@ app.use(bodyParser.json({ limit: '50mb' })); // application/json
 
 app.use('/auth', authRoutes);
 
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/upload',  isAuth ,upload.single('file'), async (req, res) => {
   if (!req.file) {
     res.status(400).send('Error: No files found');
   } else {
@@ -63,22 +65,15 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       .png()
       .toBuffer();
 
-    const filename = uuidv4() + '.' + 'png';
+    // const filename = uuidv4() + '.' + 'png';
+    const filename = req.userId + '.' + 'png';
     const blob = firebase.bucket.file('profile/' + filename);
-    // const blob = firebase.bucket.file(
-    //   'profile/' + uuidv4() + '.' + mime.extension(req.file.mimetype)
-    // );
 
     const blobWriter = blob.createWriteStream({
       metadata: {
         contentType: 'image/png',
       },
     });
-    // const blobWriter = blob.createWriteStream({
-    //   metadata: {
-    //     contentType: req.file.mimetype,
-    //   },
-    // });
 
     blobWriter.on('error', (err) => {
       console.log(err);
@@ -89,7 +84,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     });
 
     blobWriter.end(buff);
-    // blobWriter.end(req.file.buffer);
+
   }
 });
 
@@ -106,6 +101,11 @@ app.get('/profile/img/:id', (req, res) => {
   const file = firebase.bucket.file('profile/' + req.params.id);
   file.download().then((downloadres) => {
     res.status(200).send(downloadres[0]);
+  }).catch((err) => {
+    const fileDefault = firebase.bucket.file('profile/' + 'avatardefault.png');
+    fileDefault.download().then((downloadres) => {
+      res.status(200).send(downloadres[0]);
+    })
   });
 });
 
